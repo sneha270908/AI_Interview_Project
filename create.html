@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>HireAI — Create Interview</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --blue:#00d4ff;--purple:#7c3aed;--green:#00ff88;
+  --red:#ef4444;--yellow:#fbbf24;
+  --bg:#05050f;--bg2:#08081a;--sidebar:#060612;
+  --card:rgba(255,255,255,0.03);--border:rgba(255,255,255,0.07);
+  --text:#fff;--muted:rgba(255,255,255,0.4);
+}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;display:flex;min-height:100vh;cursor:none;}
+#cursor{position:fixed;width:10px;height:10px;background:var(--blue);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);mix-blend-mode:difference;}
+#cursor-ring{position:fixed;width:32px;height:32px;border:1px solid rgba(0,212,255,0.35);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:width .3s,height .3s;}
+
+/* SIDEBAR */
+#sidebar{width:240px;min-height:100vh;background:var(--sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;z-index:100;}
+.sidebar-logo{padding:28px 24px 24px;border-bottom:1px solid var(--border);font-family:'Syne',sans-serif;font-weight:800;font-size:20px;}
+.sidebar-logo span{color:var(--blue);}
+.sidebar-nav{flex:1;padding:16px 12px;}
+.nav-section{font-size:10px;letter-spacing:2px;color:rgba(255,255,255,.2);font-family:'JetBrains Mono',monospace;text-transform:uppercase;padding:16px 12px 8px;}
+.nav-item{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:8px;color:var(--muted);font-size:14px;text-decoration:none;transition:all .2s;margin-bottom:2px;position:relative;cursor:none;}
+.nav-item:hover{background:rgba(255,255,255,.04);color:rgba(255,255,255,.8);}
+.nav-item.active{background:rgba(0,212,255,.07);color:var(--blue);}
+.nav-item.active::before{content:'';position:absolute;left:0;top:4px;bottom:4px;width:2px;border-radius:2px;background:var(--blue);}
+.nav-icon{font-size:16px;width:20px;text-align:center;}
+.sidebar-bottom{padding:16px 12px 24px;border-top:1px solid var(--border);}
+.user-card{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid var(--border);}
+.user-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--purple));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;}
+.user-name{font-size:13px;font-weight:500;}
+.user-role{font-size:11px;color:var(--muted);}
+
+#main{margin-left:240px;flex:1;display:flex;flex-direction:column;}
+#topbar{padding:20px 36px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg);position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);}
+.page-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;letter-spacing:-.5px;}
+.page-sub{font-size:13px;color:var(--muted);margin-top:2px;}
+.back-btn{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:14px;text-decoration:none;cursor:none;transition:color .2s;}
+.back-btn:hover{color:#fff;}
+
+#content{padding:40px 48px;max-width:900px;margin:0 auto;width:100%;}
+
+/* STEPPER */
+.stepper{display:flex;align-items:center;gap:0;margin-bottom:48px;}
+.step{display:flex;align-items:center;gap:10px;flex:1;}
+.step:last-child{flex:none;}
+.step-circle{
+  width:36px;height:36px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;
+  font-family:'JetBrains Mono',monospace;
+  border:2px solid var(--border);
+  color:var(--muted);background:var(--bg2);
+  transition:all .3s;flex-shrink:0;
+}
+.step.active .step-circle{border-color:var(--blue);color:var(--blue);background:rgba(0,212,255,.08);}
+.step.done .step-circle{border-color:var(--green);color:var(--bg);background:var(--green);}
+.step-label{font-size:13px;color:var(--muted);white-space:nowrap;}
+.step.active .step-label{color:#fff;}
+.step.done .step-label{color:var(--green);}
+.step-line{flex:1;height:1px;background:var(--border);margin:0 8px;}
+.step-line.done{background:var(--green);}
+
+/* STEP PANELS */
+.step-panel{display:none;animation:fadeIn .3s ease;}
+.step-panel.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+
+/* SECTION */
+.section-title{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;letter-spacing:-.5px;margin-bottom:8px;}
+.section-sub{font-size:14px;color:var(--muted);margin-bottom:32px;line-height:1.6;}
+
+/* JD TEXTAREA */
+.jd-wrap{position:relative;margin-bottom:24px;}
+.jd-label{font-size:12px;letter-spacing:1px;color:rgba(255,255,255,.35);font-family:'JetBrains Mono',monospace;text-transform:uppercase;margin-bottom:10px;display:block;}
+.jd-textarea{
+  width:100%;min-height:200px;padding:20px;
+  background:rgba(255,255,255,.03);
+  border:1px solid var(--border);border-radius:12px;
+  color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;
+  line-height:1.7;resize:vertical;outline:none;
+  transition:border-color .2s,box-shadow .2s;
+}
+.jd-textarea::placeholder{color:rgba(255,255,255,.18);}
+.jd-textarea:focus{border-color:rgba(0,212,255,.4);box-shadow:0 0 0 3px rgba(0,212,255,.08);}
+.jd-hint{font-size:12px;color:rgba(255,255,255,.2);margin-top:8px;}
+
+/* FORM ROW */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;}
+.form-group{display:flex;flex-direction:column;gap:8px;}
+.form-label{font-size:12px;letter-spacing:1px;color:rgba(255,255,255,.35);font-family:'JetBrains Mono',monospace;text-transform:uppercase;}
+.form-input,.form-select{
+  padding:12px 16px;background:rgba(255,255,255,.03);
+  border:1px solid var(--border);border-radius:8px;
+  color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;
+  outline:none;transition:border-color .2s;
+}
+.form-input::placeholder{color:rgba(255,255,255,.18);}
+.form-input:focus,.form-select:focus{border-color:rgba(0,212,255,.4);}
+.form-select option{background:#0a0a1a;color:#fff;}
+
+/* AI BUTTON */
+.btn-ai{
+  width:100%;padding:16px;
+  background:linear-gradient(135deg,rgba(0,212,255,.15),rgba(124,58,237,.15));
+  border:1px solid rgba(0,212,255,.25);
+  color:#fff;font-family:'Syne',sans-serif;
+  font-size:16px;font-weight:700;
+  border-radius:10px;cursor:none;
+  transition:all .25s;display:flex;align-items:center;justify-content:center;gap:10px;
+  position:relative;overflow:hidden;
+}
+.btn-ai::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,212,255,.05),rgba(124,58,237,.05));opacity:0;transition:opacity .3s;}
+.btn-ai:hover{border-color:rgba(0,212,255,.5);box-shadow:0 0 32px rgba(0,212,255,.15);}
+.btn-ai:hover::before{opacity:1;}
+.sparkle{animation:spin 3s linear infinite;display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* LOADING STATE */
+.ai-loading{display:none;text-align:center;padding:40px;color:var(--muted);}
+.ai-loading.show{display:block;}
+.loading-ring{
+  width:48px;height:48px;
+  border:3px solid var(--border);
+  border-top-color:var(--blue);
+  border-radius:50%;
+  animation:spin 1s linear infinite;
+  margin:0 auto 16px;
+}
+.loading-text{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--blue);}
+.loading-dots::after{content:'...';animation:dots 1.5s infinite;}
+@keyframes dots{0%{content:'.';}33%{content:'..';}66%{content:'...';}100%{content:'.'}}
+
+/* QUESTIONS */
+.questions-list{display:flex;flex-direction:column;gap:12px;margin-bottom:32px;}
+.q-card{
+  padding:20px 24px;
+  background:rgba(255,255,255,.03);
+  border:1px solid var(--border);
+  border-radius:12px;
+  display:flex;gap:16px;align-items:flex-start;
+  transition:border-color .2s,background .2s;
+  animation:slideIn .35s ease both;
+}
+@keyframes slideIn{from{opacity:0;transform:translateX(-12px);}to{opacity:1;transform:none;}}
+.q-card:hover{border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.04);}
+.q-num{
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px;color:var(--blue);
+  background:rgba(0,212,255,.08);
+  border:1px solid rgba(0,212,255,.15);
+  padding:4px 10px;border-radius:99px;
+  white-space:nowrap;flex-shrink:0;margin-top:2px;
+}
+.q-body{flex:1;}
+.q-text{font-size:14px;line-height:1.6;margin-bottom:10px;}
+.q-tags{display:flex;gap:6px;flex-wrap:wrap;}
+.q-tag{
+  padding:3px 10px;border-radius:99px;
+  font-size:11px;font-weight:500;
+}
+.q-tag.technical{background:rgba(0,212,255,.1);color:var(--blue);}
+.q-tag.behavioral{background:rgba(124,58,237,.1);color:#a78bfa;}
+.q-tag.situational{background:rgba(251,191,36,.1);color:var(--yellow);}
+.q-tag.senior{background:rgba(239,68,68,.1);color:var(--red);}
+.q-tag.mid{background:rgba(0,255,136,.1);color:var(--green);}
+.q-tag.junior{background:rgba(255,255,255,.08);color:rgba(255,255,255,.5);}
+.q-actions{display:flex;gap:6px;flex-shrink:0;}
+.q-btn{padding:5px 10px;border-radius:6px;font-size:11px;cursor:none;border:1px solid var(--border);background:transparent;color:var(--muted);transition:all .2s;}
+.q-btn:hover{background:rgba(255,255,255,.06);color:#fff;border-color:rgba(255,255,255,.2);}
+.q-btn.del:hover{background:rgba(239,68,68,.1);color:var(--red);border-color:rgba(239,68,68,.2);}
+
+/* PERSONA CARDS */
+.persona-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:32px;}
+.persona-card{
+  padding:28px 24px;
+  background:rgba(255,255,255,.03);
+  border:2px solid var(--border);
+  border-radius:14px;text-align:center;
+  cursor:none;transition:all .25s;
+  position:relative;overflow:hidden;
+}
+.persona-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent,rgba(0,212,255,.05));opacity:0;transition:opacity .3s;}
+.persona-card:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.15);}
+.persona-card.selected{border-color:var(--blue);background:rgba(0,212,255,.05);}
+.persona-card.selected::before{opacity:1;}
+.persona-check{
+  position:absolute;top:12px;right:12px;
+  width:20px;height:20px;border-radius:50%;
+  background:var(--blue);
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;opacity:0;transition:opacity .2s;
+}
+.persona-card.selected .persona-check{opacity:1;}
+.persona-emoji{font-size:40px;margin-bottom:14px;display:block;}
+.persona-name{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:6px;}
+.persona-sub{font-size:12px;color:var(--muted);line-height:1.5;}
+.persona-tags{margin-top:12px;display:flex;flex-direction:column;gap:4px;}
+.ptag{font-size:11px;color:rgba(255,255,255,.3);}
+
+/* SETTINGS */
+.settings-grid{display:flex;flex-direction:column;gap:16px;margin-bottom:32px;}
+.setting-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 20px;
+  background:rgba(255,255,255,.02);
+  border:1px solid var(--border);
+  border-radius:10px;
+}
+.setting-info{flex:1;}
+.setting-name{font-size:14px;font-weight:500;margin-bottom:3px;}
+.setting-desc{font-size:12px;color:var(--muted);}
+.toggle{
+  width:44px;height:24px;
+  background:var(--border);border-radius:99px;
+  position:relative;cursor:none;
+  transition:background .2s;flex-shrink:0;
+}
+.toggle.on{background:var(--blue);}
+.toggle-knob{
+  width:18px;height:18px;
+  background:#fff;border-radius:50%;
+  position:absolute;top:3px;left:3px;
+  transition:transform .2s;
+}
+.toggle.on .toggle-knob{transform:translateX(20px);}
+.slider-wrap{display:flex;align-items:center;gap:12px;}
+.time-slider{
+  -webkit-appearance:none;
+  width:120px;height:4px;
+  background:rgba(0,212,255,.2);
+  border-radius:2px;outline:none;cursor:none;
+}
+.time-slider::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  width:16px;height:16px;border-radius:50%;
+  background:var(--blue);cursor:none;
+}
+.slider-val{
+  font-family:'JetBrains Mono',monospace;
+  font-size:12px;color:var(--blue);
+  min-width:36px;
+}
+
+/* PREVIEW */
+.preview-box{
+  padding:24px;
+  background:rgba(255,255,255,.02);
+  border:1px solid var(--border);
+  border-radius:12px;margin-bottom:24px;
+}
+.preview-label{font-size:11px;letter-spacing:2px;color:rgba(255,255,255,.2);font-family:'JetBrains Mono',monospace;text-transform:uppercase;margin-bottom:14px;}
+.preview-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px;}
+.preview-row:last-child{border:none;}
+.preview-key{color:var(--muted);}
+.preview-val{font-weight:500;}
+
+/* INVITE */
+.invite-box{
+  padding:20px;
+  background:rgba(0,212,255,.04);
+  border:1px solid rgba(0,212,255,.15);
+  border-radius:12px;
+  display:flex;align-items:center;gap:12px;
+  margin-bottom:16px;
+}
+.invite-link{
+  flex:1;font-family:'JetBrains Mono',monospace;
+  font-size:13px;color:var(--blue);
+  word-break:break-all;
+}
+.copy-btn{
+  padding:8px 16px;background:rgba(0,212,255,.15);
+  border:1px solid rgba(0,212,255,.25);
+  color:var(--blue);font-size:12px;
+  border-radius:6px;cursor:none;
+  font-family:'DM Sans',sans-serif;
+  transition:all .2s;white-space:nowrap;
+}
+.copy-btn:hover{background:rgba(0,212,255,.25);}
+.copy-btn.copied{color:var(--green);border-color:rgba(0,255,136,.25);background:rgba(0,255,136,.1);}
+
+/* BOTTOM NAV */
+.bottom-nav{
+  display:flex;justify-content:space-between;
+  align-items:center;
+  padding:24px 0 0;
+  border-top:1px solid var(--border);
+  margin-top:8px;
+}
+.btn-back-step{
+  padding:12px 24px;background:transparent;
+  border:1px solid var(--border);
+  color:var(--muted);font-family:'DM Sans',sans-serif;
+  font-size:14px;border-radius:8px;cursor:none;
+  transition:all .2s;
+}
+.btn-back-step:hover{border-color:rgba(255,255,255,.2);color:#fff;}
+.btn-next{
+  padding:12px 32px;
+  background:linear-gradient(135deg,var(--blue),var(--purple));
+  border:none;color:#fff;
+  font-family:'Syne',sans-serif;
+  font-size:15px;font-weight:700;
+  border-radius:8px;cursor:none;
+  transition:transform .2s,box-shadow .2s;
+}
+.btn-next:hover{transform:scale(1.04);box-shadow:0 8px 24px rgba(0,212,255,.25);}
+.btn-launch{
+  padding:14px 36px;
+  background:linear-gradient(135deg,var(--green),var(--blue));
+  border:none;color:#000;
+  font-family:'Syne',sans-serif;
+  font-size:16px;font-weight:800;
+  border-radius:8px;cursor:none;
+  transition:transform .2s,box-shadow .2s;
+}
+.btn-launch:hover{transform:scale(1.04);box-shadow:0 12px 32px rgba(0,255,136,.25);}
+</style>
+</head>
+<body>
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<nav id="sidebar">
+  <div class="sidebar-logo">HIRE<span>AI</span></div>
+  <div class="sidebar-nav">
+    <div class="nav-section">Main</div>
+    <a href="dashboard.html" class="nav-item"><span class="nav-icon">⬛</span> Overview</a>
+    <a href="#" class="nav-item"><span class="nav-icon">🎥</span> Interviews</a>
+    <a href="#" class="nav-item"><span class="nav-icon">👥</span> Candidates</a>
+    <a href="create.html" class="nav-item active"><span class="nav-icon">✦</span> Create Interview</a>
+    <div class="nav-section">Analytics</div>
+    <a href="#" class="nav-item"><span class="nav-icon">📊</span> Analytics</a>
+    <a href="review.html" class="nav-item"><span class="nav-icon">▶</span> Replay</a>
+    <a href="#" class="nav-item"><span class="nav-icon">📄</span> Reports</a>
+    <div class="nav-section">Account</div>
+    <a href="#" class="nav-item"><span class="nav-icon">⚙</span> Settings</a>
+    <a href="index.html" class="nav-item"><span class="nav-icon">←</span> Logout</a>
+  </div>
+  <div class="sidebar-bottom">
+    <div class="user-card">
+      <div class="user-avatar">AR</div>
+      <div><div class="user-name">Ananya Rao</div><div class="user-role">Head of Talent</div></div>
+    </div>
+  </div>
+</nav>
+
+<div id="main">
+  <div id="topbar">
+    <div>
+      <div class="page-title">Create Interview</div>
+      <div class="page-sub">AI-generated questions from your job description</div>
+    </div>
+    <a href="dashboard.html" class="back-btn">← Back to Dashboard</a>
+  </div>
+
+  <div id="content">
+
+    <!-- STEPPER -->
+    <div class="stepper">
+      <div class="step active" id="s1">
+        <div class="step-circle" id="sc1">1</div>
+        <div class="step-label">Job Details</div>
+      </div>
+      <div class="step-line" id="sl1"></div>
+      <div class="step" id="s2">
+        <div class="step-circle" id="sc2">2</div>
+        <div class="step-label">Questions</div>
+      </div>
+      <div class="step-line" id="sl2"></div>
+      <div class="step" id="s3">
+        <div class="step-circle" id="sc3">3</div>
+        <div class="step-label">Settings</div>
+      </div>
+      <div class="step-line" id="sl3"></div>
+      <div class="step" id="s4">
+        <div class="step-circle" id="sc4">4</div>
+        <div class="step-label">Launch</div>
+      </div>
+    </div>
+
+    <!-- STEP 1: JOB DETAILS -->
+    <div class="step-panel active" id="panel1">
+      <div class="section-title">Job Details</div>
+      <div class="section-sub">Paste your job description below — our AI will generate tailored interview questions instantly.</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Job Title</label>
+          <input type="text" class="form-input" placeholder="e.g. Senior Backend Engineer" id="job-title"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Company</label>
+          <input type="text" class="form-input" placeholder="e.g. Acme Technologies" id="company"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Seniority Level</label>
+          <select class="form-select" id="level">
+            <option>Junior (0-2 years)</option>
+            <option selected>Mid-Level (2-5 years)</option>
+            <option>Senior (5+ years)</option>
+            <option>Lead / Principal</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Interview Language</label>
+          <select class="form-select">
+            <option>English</option>
+            <option>Hindi</option>
+            <option>Mixed (Hinglish)</option>
+          </select>
+        </div>
+      </div>
+      <div class="jd-wrap">
+        <label class="jd-label">Job Description</label>
+        <textarea class="jd-textarea" id="jd-input" placeholder="Paste your full job description here...
+
+Example:
+We're looking for a Senior Backend Engineer to join our platform team. You'll design and build scalable microservices using Node.js and Go, work with PostgreSQL and Redis, and collaborate with frontend and DevOps teams..."></textarea>
+        <div class="jd-hint">Tip: The more detail you provide, the more relevant the AI-generated questions will be.</div>
+      </div>
+      <button class="btn-ai" id="gen-btn" onclick="generateQuestions()">
+        <span class="sparkle">✦</span> Generate Questions with AI
+      </button>
+      <div class="ai-loading" id="ai-loading">
+        <div class="loading-ring"></div>
+        <div class="loading-text">AI is thinking<span class="loading-dots"></span></div>
+        <div style="font-size:12px;color:rgba(255,255,255,.2);margin-top:8px;">Analyzing JD and generating tailored questions</div>
+      </div>
+      <div class="bottom-nav">
+        <div></div>
+        <button class="btn-next" onclick="goToStep(2)">Next: Review Questions →</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: QUESTIONS -->
+    <div class="step-panel" id="panel2">
+      <div class="section-title">Review Questions</div>
+      <div class="section-sub">AI has generated 6 tailored questions. Edit, reorder, or regenerate any of them.</div>
+      <div class="questions-list" id="q-list">
+        <div class="q-card" style="animation-delay:.05s">
+          <span class="q-num">Q1</span>
+          <div class="q-body">
+            <div class="q-text">Walk me through how you'd design a rate-limiting system for a high-traffic API that handles 50,000 requests per second. What data structures and caching strategies would you use?</div>
+            <div class="q-tags"><span class="q-tag technical">Technical</span><span class="q-tag senior">Senior</span></div>
+          </div>
+          <div class="q-actions"><button class="q-btn">✎ Edit</button><button class="q-btn del">✕</button></div>
+        </div>
+        <div class="q-card" style="animation-delay:.1s">
+          <span class="q-num">Q2</span>
+          <div class="q-body">
+            <div class="q-text">Tell me about a time you had to make a critical architectural decision under tight deadlines. What was the tradeoff you accepted and how did it play out?</div>
+            <div class="q-tags"><span class="q-tag behavioral">Behavioral</span><span class="q-tag mid">Mid</span></div>
+          </div>
+          <div class="q-actions"><button class="q-btn">✎ Edit</button><button class="q-btn del">✕</button></div>
+        </div>
+        <div class="q-card" style="animation-delay:.15s">
+          <span class="q-num">Q3</span>
+          <div class="q-body">
+            <div class="q-text">Your Node.js service starts experiencing memory leaks in production affecting 10% of requests. Walk me through your debugging and resolution process.</div>
+            <div class="q-tags"><span class="q-tag technical">Technical</span><span class="q-tag senior">Senior</span></div>
+          </div>
+          <div class="q-actions"><button class="q-btn">✎ Edit</button><button class="q-btn del">✕</button></div>
+        </div>
+        <div class="q-card" style="animation-delay:.2s">
+          <span class="q-num">Q4</span>
+          <div class="q-body">
+            <div class="q-text">How would you design a database schema for a multi-tenant SaaS application ensuring data isolation, performance at scale, and easy migration paths?</div>
+            <div class="q-tags"><span class="q-tag technical">Technical</span><span class="q-tag senior">Senior</span></div>
+          </div>
+          <div class="q-actions"><button class="q-btn">✎ Edit</button><button class="q-btn del">✕</button></div>
+        </div>
+        <div class="q-card" style="animation-delay:.25s">
+          <span class="q-num">Q5</span>
+          <div class="q-body">
+            <div class="q-text">Imagine your team disagrees on whether to use a message queue vs direct API calls for a critical workflow. How do you facilitate that decision and build consensus?</div>
+            <div class="q-tags"><span class="q-tag situational">Situational</span><span class="q-tag mid">Mid</span></div>
+          </div>
+          <div class="q-actions"><button class="q-btn">✎ Edit</button><button class="q-btn del">✕</button></div>
+        </div>
+        <div class="q-card" style="animation-delay:.3s">
+          <span class="q-num">Q6</span>
+          <div class="q-body">
+            <div class="q-text">What is your approach to writing production-grade code versus prototype code? How do you decide when done is good enough?</div>
+            <div class="q-tags"><span class="q-tag behavioral">Behavioral</span><span class="q-tag mid">Mid</span></div>
+          </div>
+          <div class="q-actions"><button class="q-btn">✎ Edit</button><button class="q-btn del">✕</button></div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:32px;">
+        <button class="q-btn" style="padding:10px 18px;font-size:13px;border-radius:8px;" onclick="goToStep(1)">+ Add Question</button>
+        <button class="q-btn" style="padding:10px 18px;font-size:13px;border-radius:8px;color:var(--blue);border-color:rgba(0,212,255,.2);">↺ Regenerate All</button>
+      </div>
+      <div class="bottom-nav">
+        <button class="btn-back-step" onclick="goToStep(1)">← Back</button>
+        <button class="btn-next" onclick="goToStep(3)">Next: Settings →</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: SETTINGS -->
+    <div class="step-panel" id="panel3">
+      <div class="section-title">Interview Settings</div>
+      <div class="section-sub">Configure how the AI conducts the interview and what to monitor.</div>
+
+      <div style="margin-bottom:28px;">
+        <div class="form-label" style="margin-bottom:14px;">Interviewer Persona</div>
+        <div class="persona-grid">
+          <div class="persona-card" onclick="selectPersona(this)">
+            <div class="persona-check">✓</div>
+            <span class="persona-emoji">😊</span>
+            <div class="persona-name">Friendly</div>
+            <div class="persona-sub">Warm, encouraging tone. Best for junior roles and culture-fit screening.</div>
+            <div class="persona-tags">
+              <span class="ptag">3 min/question</span>
+              <span class="ptag">Soft follow-ups</span>
+            </div>
+          </div>
+          <div class="persona-card selected" onclick="selectPersona(this)">
+            <div class="persona-check">✓</div>
+            <span class="persona-emoji">😐</span>
+            <div class="persona-name">Professional</div>
+            <div class="persona-sub">Neutral, direct tone. Standard for mid-level positions.</div>
+            <div class="persona-tags">
+              <span class="ptag">2 min/question</span>
+              <span class="ptag">Direct follow-ups</span>
+            </div>
+          </div>
+          <div class="persona-card" onclick="selectPersona(this)">
+            <div class="persona-check">✓</div>
+            <span class="persona-emoji">😤</span>
+            <div class="persona-name">Tough</div>
+            <div class="persona-sub">Pressure testing for senior & lead roles. Challenging follow-ups.</div>
+            <div class="persona-tags">
+              <span class="ptag">90s/question</span>
+              <span class="ptag">Aggressive follow-ups</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-grid">
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-name">Time Per Question</div>
+            <div class="setting-desc">Maximum time candidate has to answer each question</div>
+          </div>
+          <div class="slider-wrap">
+            <input type="range" class="time-slider" min="60" max="300" value="120" id="time-slider" oninput="document.getElementById('time-val').textContent=Math.round(this.value/60)+'m'"/>
+            <span class="slider-val" id="time-val">2m</span>
+          </div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-name">Face Detection</div>
+            <div class="setting-desc">Flag candidate if face is absent for more than 3 seconds</div>
+          </div>
+          <div class="toggle on" onclick="this.classList.toggle('on')"><div class="toggle-knob"></div></div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-name">Tab Switch Detection</div>
+            <div class="setting-desc">Flag and timestamp any browser tab switching</div>
+          </div>
+          <div class="toggle on" onclick="this.classList.toggle('on')"><div class="toggle-knob"></div></div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-name">Multiple Voice Detection</div>
+            <div class="setting-desc">Flag if more than one voice is detected during the interview</div>
+          </div>
+          <div class="toggle on" onclick="this.classList.toggle('on')"><div class="toggle-knob"></div></div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-name">Devil's Advocate Follow-up</div>
+            <div class="setting-desc">AI challenges each answer with a follow-up question</div>
+          </div>
+          <div class="toggle on" onclick="this.classList.toggle('on')"><div class="toggle-knob"></div></div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-name">Stress / Comfort Analysis</div>
+            <div class="setting-desc">Analyze voice patterns and generate per-question comfort scores</div>
+          </div>
+          <div class="toggle on" onclick="this.classList.toggle('on')"><div class="toggle-knob"></div></div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-name">Auto Highlight Reel</div>
+            <div class="setting-desc">Generate 90-second highlight clip after interview completes</div>
+          </div>
+          <div class="toggle on" onclick="this.classList.toggle('on')"><div class="toggle-knob"></div></div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-name">Slack Alerts</div>
+            <div class="setting-desc">Send real-time proctoring flags to your Slack channel</div>
+          </div>
+          <div class="toggle" onclick="this.classList.toggle('on')"><div class="toggle-knob"></div></div>
+        </div>
+      </div>
+
+      <div class="bottom-nav">
+        <button class="btn-back-step" onclick="goToStep(2)">← Back</button>
+        <button class="btn-next" onclick="goToStep(4)">Next: Launch →</button>
+      </div>
+    </div>
+
+    <!-- STEP 4: LAUNCH -->
+    <div class="step-panel" id="panel4">
+      <div class="section-title">Ready to Launch 🚀</div>
+      <div class="section-sub">Review your interview setup and send the invite link to your candidate.</div>
+      <div class="preview-box">
+        <div class="preview-label">Interview Summary</div>
+        <div class="preview-row"><span class="preview-key">Job Title</span><span class="preview-val" id="prev-title">Senior Backend Engineer</span></div>
+        <div class="preview-row"><span class="preview-key">Company</span><span class="preview-val" id="prev-co">Acme Technologies</span></div>
+        <div class="preview-row"><span class="preview-key">Questions</span><span class="preview-val">6 questions + AI follow-ups</span></div>
+        <div class="preview-row"><span class="preview-key">Persona</span><span class="preview-val">😐 Professional</span></div>
+        <div class="preview-row"><span class="preview-key">Time Limit</span><span class="preview-val">2 min per question</span></div>
+        <div class="preview-row"><span class="preview-key">Proctoring</span><span class="preview-val" style="color:var(--green)">✓ Face + Tab + Voice</span></div>
+        <div class="preview-row"><span class="preview-key">Auto Highlight Reel</span><span class="preview-val" style="color:var(--green)">✓ Enabled</span></div>
+      </div>
+      <div style="margin-bottom:24px;">
+        <div class="form-label" style="margin-bottom:10px;">Candidate Invite Link</div>
+        <div class="invite-box">
+          <div class="invite-link">hireai.app/interview/xyz-a1b2c3d4e5f6</div>
+          <button class="copy-btn" id="copy-btn" onclick="copyLink()">Copy Link</button>
+        </div>
+        <div style="font-size:12px;color:rgba(255,255,255,.2);">Link expires in 7 days. Candidate can attempt once.</div>
+      </div>
+      <div style="margin-bottom:32px;">
+        <div class="form-label" style="margin-bottom:10px;">Or Email Directly</div>
+        <div style="display:flex;gap:10px;">
+          <input type="email" class="form-input" style="flex:1" placeholder="candidate@email.com"/>
+          <button class="btn-next" style="white-space:nowrap">Send Invite ✉</button>
+        </div>
+      </div>
+      <div class="bottom-nav">
+        <button class="btn-back-step" onclick="goToStep(3)">← Back</button>
+        <button class="btn-launch" onclick="location.href='dashboard.html'">🚀 Launch Interview</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const cursor=document.getElementById('cursor');
+const ring=document.getElementById('cursor-ring');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cursor.style.left=mx+'px';cursor.style.top=my+'px';});
+function animRing(){rx+=(mx-rx)*.12;ry+=(my-ry)*.12;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(animRing);}
+animRing();
+
+let currentStep=1;
+function goToStep(n){
+  if(n===2&&currentStep===1){
+    const btn=document.getElementById('gen-btn');
+    const jd=document.getElementById('jd-input').value.trim();
+    if(!jd){document.getElementById('jd-input').focus();document.getElementById('jd-input').style.borderColor='rgba(239,68,68,.4)';return;}
+  }
+  document.querySelectorAll('.step-panel').forEach((p,i)=>{p.classList.toggle('active',i===n-1);});
+  [1,2,3,4].forEach(i=>{
+    const s=document.getElementById('s'+i);
+    const sc=document.getElementById('sc'+i);
+    s.classList.remove('active','done');
+    if(i<n){s.classList.add('done');sc.textContent='✓';}
+    else if(i===n){s.classList.add('active');sc.textContent=i;}
+    else{sc.textContent=i;}
+    if(i<4){const l=document.getElementById('sl'+i);if(l)l.classList.toggle('done',i<n);}
+  });
+  currentStep=n;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function generateQuestions(){
+  const jd=document.getElementById('jd-input').value.trim();
+  if(!jd){document.getElementById('jd-input').focus();return;}
+  document.getElementById('gen-btn').style.display='none';
+  document.getElementById('ai-loading').classList.add('show');
+  setTimeout(()=>{
+    document.getElementById('ai-loading').classList.remove('show');
+    document.getElementById('gen-btn').style.display='flex';
+    document.getElementById('gen-btn').textContent='✦ Regenerate Questions';
+    goToStep(2);
+  },2200);
+}
+
+function selectPersona(el){
+  document.querySelectorAll('.persona-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function copyLink(){
+  const btn=document.getElementById('copy-btn');
+  btn.textContent='Copied ✓';
+  btn.classList.add('copied');
+  setTimeout(()=>{btn.textContent='Copy Link';btn.classList.remove('copied');},2000);
+}
+
+document.getElementById('jd-input').addEventListener('input',function(){
+  this.style.borderColor='';
+  if(this.value.trim().length>50){
+    document.getElementById('gen-btn').style.background='linear-gradient(135deg,rgba(0,212,255,.2),rgba(124,58,237,.2))';
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>HireAI — Recruiter Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --blue:#00d4ff;
+  --purple:#7c3aed;
+  --green:#00ff88;
+  --red:#ef4444;
+  --yellow:#fbbf24;
+  --bg:#05050f;
+  --bg2:#08081a;
+  --sidebar:#060612;
+  --card:rgba(255,255,255,0.03);
+  --border:rgba(255,255,255,0.07);
+  --text:#fff;
+  --muted:rgba(255,255,255,0.4);
+}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'DM Sans',sans-serif;
+  display:flex;min-height:100vh;
+  overflow-x:hidden;
+  cursor:none;
+}
+
+/* CURSOR */
+#cursor{position:fixed;width:10px;height:10px;background:var(--blue);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .2s,height .2s;mix-blend-mode:difference;}
+#cursor-ring{position:fixed;width:32px;height:32px;border:1px solid rgba(0,212,255,0.35);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:width .3s,height .3s;}
+
+/* SIDEBAR */
+#sidebar{
+  width:240px;min-height:100vh;
+  background:var(--sidebar);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  position:fixed;left:0;top:0;bottom:0;
+  z-index:100;
+}
+.sidebar-logo{
+  padding:28px 24px 24px;
+  border-bottom:1px solid var(--border);
+  font-family:'Syne',sans-serif;
+  font-weight:800;font-size:20px;
+  letter-spacing:-.5px;
+}
+.sidebar-logo span{color:var(--blue);}
+.sidebar-nav{flex:1;padding:16px 12px;}
+.nav-section{
+  font-size:10px;letter-spacing:2px;
+  color:rgba(255,255,255,.2);
+  font-family:'JetBrains Mono',monospace;
+  text-transform:uppercase;
+  padding:16px 12px 8px;
+}
+.nav-item{
+  display:flex;align-items:center;gap:12px;
+  padding:11px 12px;border-radius:8px;
+  color:var(--muted);font-size:14px;
+  text-decoration:none;
+  transition:all .2s;margin-bottom:2px;
+  position:relative;cursor:none;
+}
+.nav-item:hover{
+  background:rgba(255,255,255,.04);
+  color:rgba(255,255,255,.8);
+}
+.nav-item.active{
+  background:rgba(0,212,255,.07);
+  color:var(--blue);
+}
+.nav-item.active::before{
+  content:'';position:absolute;
+  left:0;top:4px;bottom:4px;
+  width:2px;border-radius:2px;
+  background:var(--blue);
+}
+.nav-icon{font-size:16px;width:20px;text-align:center;}
+.nav-badge{
+  margin-left:auto;
+  background:rgba(0,212,255,.15);
+  color:var(--blue);
+  font-size:10px;font-weight:600;
+  padding:2px 8px;border-radius:99px;
+  font-family:'JetBrains Mono',monospace;
+}
+.sidebar-bottom{
+  padding:16px 12px 24px;
+  border-top:1px solid var(--border);
+}
+.user-card{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 12px;border-radius:8px;
+  background:rgba(255,255,255,.03);
+  border:1px solid var(--border);
+}
+.user-avatar{
+  width:34px;height:34px;border-radius:50%;
+  background:linear-gradient(135deg,var(--blue),var(--purple));
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;flex-shrink:0;
+}
+.user-name{font-size:13px;font-weight:500;}
+.user-role{font-size:11px;color:var(--muted);}
+
+/* MAIN */
+#main{
+  margin-left:240px;flex:1;
+  display:flex;flex-direction:column;
+  min-height:100vh;
+}
+
+/* TOPBAR */
+#topbar{
+  padding:20px 36px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;
+  justify-content:space-between;
+  background:var(--bg);
+  position:sticky;top:0;z-index:50;
+  backdrop-filter:blur(12px);
+}
+.page-title{
+  font-family:'Syne',sans-serif;
+  font-size:22px;font-weight:800;
+  letter-spacing:-.5px;
+}
+.page-sub{font-size:13px;color:var(--muted);margin-top:2px;}
+.topbar-right{display:flex;align-items:center;gap:12px;}
+.icon-btn{
+  width:38px;height:38px;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:8px;display:flex;
+  align-items:center;justify-content:center;
+  cursor:none;font-size:16px;
+  transition:all .2s;position:relative;
+}
+.icon-btn:hover{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.15);}
+.notif-dot{
+  position:absolute;top:7px;right:7px;
+  width:6px;height:6px;border-radius:50%;
+  background:var(--blue);
+}
+.btn-new{
+  padding:10px 20px;
+  background:linear-gradient(135deg,var(--blue),var(--purple));
+  border:none;color:#fff;
+  font-family:'DM Sans',sans-serif;
+  font-size:13px;font-weight:500;
+  border-radius:8px;cursor:none;
+  transition:transform .2s,box-shadow .2s;
+  white-space:nowrap;
+}
+.btn-new:hover{transform:scale(1.04);box-shadow:0 8px 24px rgba(0,212,255,.25);}
+
+/* CONTENT */
+#content{padding:32px 36px;flex:1;}
+
+/* STAT CARDS */
+.stats-row{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:16px;margin-bottom:32px;
+}
+.stat-card{
+  padding:24px;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:14px;
+  transition:border-color .3s,transform .2s;
+  position:relative;overflow:hidden;
+}
+.stat-card::after{
+  content:'';position:absolute;
+  top:0;left:0;right:0;height:1px;
+  opacity:0;transition:opacity .3s;
+}
+.stat-card:hover{transform:translateY(-2px);}
+.stat-card.blue::after{background:linear-gradient(90deg,transparent,var(--blue),transparent);opacity:1;}
+.stat-card.purple::after{background:linear-gradient(90deg,transparent,var(--purple),transparent);opacity:1;}
+.stat-card.green::after{background:linear-gradient(90deg,transparent,var(--green),transparent);opacity:1;}
+.stat-card.yellow::after{background:linear-gradient(90deg,transparent,var(--yellow),transparent);opacity:1;}
+.stat-card:hover{border-color:rgba(255,255,255,.15);}
+.stat-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.stat-icon{
+  width:36px;height:36px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;
+}
+.stat-icon.blue{background:rgba(0,212,255,.1);}
+.stat-icon.purple{background:rgba(124,58,237,.1);}
+.stat-icon.green{background:rgba(0,255,136,.1);}
+.stat-icon.yellow{background:rgba(251,191,36,.1);}
+.stat-trend{
+  font-size:11px;font-family:'JetBrains Mono',monospace;
+  padding:3px 8px;border-radius:99px;
+}
+.stat-trend.up{background:rgba(0,255,136,.1);color:var(--green);}
+.stat-trend.down{background:rgba(239,68,68,.1);color:var(--red);}
+.stat-val{
+  font-family:'Syne',sans-serif;
+  font-size:36px;font-weight:800;
+  line-height:1;margin-bottom:4px;
+}
+.stat-label{font-size:13px;color:var(--muted);}
+
+/* GRID LAYOUT */
+.grid-2{display:grid;grid-template-columns:1fr 360px;gap:24px;margin-bottom:24px;}
+.grid-full{margin-bottom:24px;}
+
+/* PANEL */
+.panel{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;
+}
+.panel-header{
+  padding:20px 24px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.panel-title{
+  font-family:'Syne',sans-serif;
+  font-size:15px;font-weight:700;
+  letter-spacing:-.3px;
+}
+.panel-action{
+  font-size:12px;color:var(--blue);
+  cursor:none;background:none;border:none;
+  font-family:'DM Sans',sans-serif;
+  transition:opacity .2s;
+}
+.panel-action:hover{opacity:.7;}
+
+/* CANDIDATES TABLE */
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+thead th{
+  padding:12px 20px;
+  font-size:11px;letter-spacing:1px;
+  color:rgba(255,255,255,.25);
+  font-family:'JetBrains Mono',monospace;
+  text-transform:uppercase;
+  text-align:left;
+  border-bottom:1px solid var(--border);
+  white-space:nowrap;
+}
+tbody tr{
+  border-bottom:1px solid rgba(255,255,255,.03);
+  transition:background .15s;cursor:none;
+}
+tbody tr:hover{background:rgba(255,255,255,.02);}
+tbody tr:last-child{border:none;}
+td{padding:14px 20px;font-size:13px;vertical-align:middle;}
+.cand-cell{display:flex;align-items:center;gap:12px;}
+.avatar{
+  width:34px;height:34px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;flex-shrink:0;
+}
+.cand-name{font-size:13px;font-weight:500;}
+.cand-role{font-size:11px;color:var(--muted);}
+.score-wrap{display:flex;align-items:center;gap:10px;}
+.score-bar-bg{
+  width:80px;height:4px;
+  background:rgba(255,255,255,.07);
+  border-radius:2px;overflow:hidden;
+}
+.score-bar-fill{height:100%;border-radius:2px;}
+.score-num{
+  font-family:'JetBrains Mono',monospace;
+  font-size:12px;color:var(--muted);
+  min-width:28px;
+}
+.badge{
+  padding:4px 10px;border-radius:99px;
+  font-size:11px;font-weight:500;
+  letter-spacing:.3px;white-space:nowrap;
+}
+.badge.strong{background:rgba(0,255,136,.1);color:var(--green);}
+.badge.review{background:rgba(251,191,36,.1);color:var(--yellow);}
+.badge.pending{background:rgba(0,212,255,.1);color:var(--blue);}
+.badge.reject{background:rgba(239,68,68,.1);color:var(--red);}
+.badge.live{
+  background:rgba(239,68,68,.15);color:var(--red);
+  animation:pulse-badge 1.5s infinite;
+}
+@keyframes pulse-badge{0%,100%{opacity:1;}50%{opacity:.5;}}
+.action-btns{display:flex;gap:6px;}
+.act-btn{
+  padding:5px 12px;
+  border-radius:6px;font-size:11px;
+  cursor:none;border:none;
+  font-family:'DM Sans',sans-serif;
+  transition:all .2s;
+}
+.act-btn.view{
+  background:rgba(0,212,255,.1);
+  color:var(--blue);
+}
+.act-btn.view:hover{background:rgba(0,212,255,.2);}
+.act-btn.more{
+  background:rgba(255,255,255,.05);
+  color:var(--muted);
+}
+.act-btn.more:hover{background:rgba(255,255,255,.1);color:#fff;}
+
+/* ACTIVITY FEED */
+.feed-list{padding:8px 0;}
+.feed-item{
+  padding:14px 24px;
+  display:flex;gap:14px;
+  border-bottom:1px solid rgba(255,255,255,.03);
+  transition:background .15s;cursor:none;
+}
+.feed-item:hover{background:rgba(255,255,255,.02);}
+.feed-item:last-child{border:none;}
+.feed-dot{
+  width:8px;height:8px;border-radius:50%;
+  margin-top:5px;flex-shrink:0;
+}
+.feed-dot.blue{background:var(--blue);}
+.feed-dot.green{background:var(--green);}
+.feed-dot.yellow{background:var(--yellow);}
+.feed-dot.red{background:var(--red);}
+.feed-dot.purple{background:#a78bfa;}
+.feed-text{font-size:13px;line-height:1.5;}
+.feed-text strong{color:#fff;font-weight:500;}
+.feed-time{
+  font-size:11px;color:rgba(255,255,255,.2);
+  font-family:'JetBrains Mono',monospace;
+  margin-top:3px;
+}
+
+/* QUICK STATS PANEL */
+.quick-stats{padding:20px 24px;}
+.qs-row{
+  display:flex;justify-content:space-between;
+  align-items:center;
+  padding:10px 0;
+  border-bottom:1px solid rgba(255,255,255,.04);
+}
+.qs-row:last-child{border:none;}
+.qs-label{font-size:13px;color:var(--muted);}
+.qs-val{
+  font-family:'JetBrains Mono',monospace;
+  font-size:13px;font-weight:500;
+}
+.qs-val.blue{color:var(--blue);}
+.qs-val.green{color:var(--green);}
+.qs-val.yellow{color:var(--yellow);}
+
+/* CHART BAR */
+.chart-section{padding:24px;}
+.chart-label{
+  display:flex;justify-content:space-between;
+  font-size:11px;color:rgba(255,255,255,.2);
+  font-family:'JetBrains Mono',monospace;
+  margin-bottom:16px;
+}
+.bar-chart{display:flex;gap:8px;align-items:flex-end;height:100px;}
+.bar-col{display:flex;flex-direction:column;align-items:center;flex:1;gap:6px;}
+.bar{
+  width:100%;border-radius:4px 4px 0 0;
+  background:linear-gradient(to top,var(--blue),var(--purple));
+  opacity:.7;transition:opacity .2s;
+  min-height:4px;
+}
+.bar:hover{opacity:1;}
+.bar-lbl{font-size:10px;color:rgba(255,255,255,.25);font-family:'JetBrains Mono',monospace;}
+
+/* SCORE RINGS */
+.rings-row{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:16px;padding:24px;
+}
+.ring-wrap{text-align:center;}
+.ring-svg{display:block;margin:0 auto 10px;}
+.ring-label{font-size:12px;color:var(--muted);}
+.ring-val{
+  font-family:'Syne',sans-serif;
+  font-size:18px;font-weight:800;
+}
+
+/* NOTIFICATION PANEL */
+.notif-panel{
+  position:fixed;top:72px;right:36px;
+  width:320px;
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:12px;overflow:hidden;
+  z-index:200;
+  transform:translateX(360px);
+  transition:transform .35s cubic-bezier(.2,.8,.2,1);
+  box-shadow:0 24px 60px rgba(0,0,0,.6);
+}
+.notif-panel.open{transform:translateX(0);}
+.notif-head{
+  padding:16px 20px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.notif-title{font-size:14px;font-weight:500;}
+.notif-close{
+  background:none;border:none;
+  color:var(--muted);font-size:18px;cursor:none;
+}
+.notif-item{
+  padding:14px 20px;
+  border-bottom:1px solid rgba(255,255,255,.03);
+  display:flex;gap:12px;
+}
+.notif-item:last-child{border:none;}
+.notif-icon{
+  width:32px;height:32px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;flex-shrink:0;
+}
+.notif-icon.warn{background:rgba(239,68,68,.1);}
+.notif-icon.info{background:rgba(0,212,255,.1);}
+.notif-icon.ok{background:rgba(0,255,136,.1);}
+.notif-body{font-size:12px;line-height:1.5;color:rgba(255,255,255,.6);}
+.notif-body strong{color:#fff;}
+.notif-ts{font-size:10px;color:rgba(255,255,255,.2);font-family:'JetBrains Mono',monospace;margin-top:3px;}
+
+/* LIVE INDICATOR */
+.live-bar{
+  background:rgba(239,68,68,.08);
+  border-bottom:1px solid rgba(239,68,68,.15);
+  padding:8px 36px;
+  display:flex;align-items:center;gap:12px;
+  font-size:12px;color:rgba(255,255,255,.5);
+}
+.live-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--red);
+  animation:blink 1.2s infinite;
+}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.2;}}
+.live-text strong{color:var(--red);}
+
+/* SKELETON */
+.skeleton{
+  background:linear-gradient(90deg,rgba(255,255,255,.04) 25%,rgba(255,255,255,.07) 50%,rgba(255,255,255,.04) 75%);
+  background-size:200% 100%;
+  animation:shimmer 1.5s infinite;
+  border-radius:4px;
+}
+@keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+
+/* FADE IN */
+.fade-up{opacity:0;transform:translateY(16px);animation:fadeUp .5s ease forwards;}
+@keyframes fadeUp{to{opacity:1;transform:none;}}
+.fade-up:nth-child(1){animation-delay:.05s;}
+.fade-up:nth-child(2){animation-delay:.1s;}
+.fade-up:nth-child(3){animation-delay:.15s;}
+.fade-up:nth-child(4){animation-delay:.2s;}
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<!-- SIDEBAR -->
+<nav id="sidebar">
+  <div class="sidebar-logo">HIRE<span>AI</span></div>
+  <div class="sidebar-nav">
+    <div class="nav-section">Main</div>
+    <a href="dashboard.html" class="nav-item active">
+      <span class="nav-icon">⬛</span> Overview
+    </a>
+    <a href="#" class="nav-item">
+      <span class="nav-icon">🎥</span> Interviews
+      <span class="nav-badge">12</span>
+    </a>
+    <a href="#" class="nav-item">
+      <span class="nav-icon">👥</span> Candidates
+    </a>
+    <a href="create.html" class="nav-item">
+      <span class="nav-icon">✦</span> Create Interview
+    </a>
+    <div class="nav-section">Analytics</div>
+    <a href="#" class="nav-item">
+      <span class="nav-icon">📊</span> Analytics
+    </a>
+    <a href="review.html" class="nav-item">
+      <span class="nav-icon">▶</span> Replay
+    </a>
+    <a href="#" class="nav-item">
+      <span class="nav-icon">📄</span> Reports
+    </a>
+    <div class="nav-section">Account</div>
+    <a href="#" class="nav-item">
+      <span class="nav-icon">⚙</span> Settings
+    </a>
+    <a href="index.html" class="nav-item">
+      <span class="nav-icon">←</span> Logout
+    </a>
+  </div>
+  <div class="sidebar-bottom">
+    <div class="user-card">
+      <div class="user-avatar">AR</div>
+      <div>
+        <div class="user-name">Ananya Rao</div>
+        <div class="user-role">Head of Talent</div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div id="main">
+
+  <!-- LIVE BAR -->
+  <div class="live-bar">
+    <div class="live-dot"></div>
+    <span class="live-text"><strong>3 interviews live right now</strong> — Siddharth Kumar, Meera Singh, +1 more</span>
+  </div>
+
+  <!-- TOPBAR -->
+  <div id="topbar">
+    <div>
+      <div class="page-title">Overview</div>
+      <div class="page-sub">Friday, 29 May 2026 · 14 candidates this week</div>
+    </div>
+    <div class="topbar-right">
+      <div class="icon-btn" id="notif-btn">🔔<div class="notif-dot"></div></div>
+      <div class="icon-btn">🔍</div>
+      <button class="btn-new" onclick="location.href='create.html'">+ New Interview</button>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div id="content">
+
+    <!-- STAT CARDS -->
+    <div class="stats-row">
+      <div class="stat-card blue fade-up">
+        <div class="stat-top">
+          <div class="stat-icon blue">🎥</div>
+          <span class="stat-trend up">↑ 24%</span>
+        </div>
+        <div class="stat-val">47</div>
+        <div class="stat-label">Total Interviews</div>
+      </div>
+      <div class="stat-card green fade-up">
+        <div class="stat-top">
+          <div class="stat-icon green">✓</div>
+          <span class="stat-trend up">↑ 18%</span>
+        </div>
+        <div class="stat-val">31</div>
+        <div class="stat-label">Completed</div>
+      </div>
+      <div class="stat-card purple fade-up">
+        <div class="stat-top">
+          <div class="stat-icon purple">⭐</div>
+          <span class="stat-trend up">↑ 5%</span>
+        </div>
+        <div class="stat-val">78.4</div>
+        <div class="stat-label">Avg Score</div>
+      </div>
+      <div class="stat-card yellow fade-up">
+        <div class="stat-top">
+          <div class="stat-icon yellow">⏳</div>
+          <span class="stat-trend down">↓ 2</span>
+        </div>
+        <div class="stat-val">9</div>
+        <div class="stat-label">Pending Review</div>
+      </div>
+    </div>
+
+    <!-- CANDIDATES + ACTIVITY -->
+    <div class="grid-2">
+
+      <!-- CANDIDATES TABLE -->
+      <div class="panel fade-up">
+        <div class="panel-header">
+          <div class="panel-title">Recent Candidates</div>
+          <button class="panel-action">View All →</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Candidate</th>
+                <th>Role</th>
+                <th>Score</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><div class="cand-cell"><div class="avatar" style="background:rgba(0,212,255,.12);color:var(--blue)">SK</div><div><div class="cand-name">Siddharth Kumar</div><div class="cand-role">Backend Engineer</div></div></div></td>
+                <td style="color:var(--muted);font-size:12px">Senior</td>
+                <td><div class="score-wrap"><div class="score-bar-bg"><div class="score-bar-fill" style="width:91%;background:linear-gradient(90deg,#00ff88,#00d4ff)"></div></div><span class="score-num">91</span></div></td>
+                <td><span class="badge live">● Live</span></td>
+                <td style="color:var(--muted);font-size:12px;font-family:'JetBrains Mono',monospace">Now</td>
+                <td><div class="action-btns"><button class="act-btn view">Watch Live</button></div></td>
+              </tr>
+              <tr>
+                <td><div class="cand-cell"><div class="avatar" style="background:rgba(0,255,136,.1);color:var(--green)">AR</div><div><div class="cand-name">Aryan Rao</div><div class="cand-role">Frontend Engineer</div></div></div></td>
+                <td style="color:var(--muted);font-size:12px">Mid</td>
+                <td><div class="score-wrap"><div class="score-bar-bg"><div class="score-bar-fill" style="width:87%;background:linear-gradient(90deg,#00ff88,#00d4ff)"></div></div><span class="score-num">87</span></div></td>
+                <td><span class="badge strong">Strong</span></td>
+                <td style="color:var(--muted);font-size:12px;font-family:'JetBrains Mono',monospace">Today</td>
+                <td><div class="action-btns"><button class="act-btn view" onclick="location.href='review.html'">Review</button><button class="act-btn more">···</button></div></td>
+              </tr>
+              <tr>
+                <td><div class="cand-cell"><div class="avatar" style="background:rgba(251,191,36,.1);color:var(--yellow)">PM</div><div><div class="cand-name">Priya Mehta</div><div class="cand-role">Product Manager</div></div></div></td>
+                <td style="color:var(--muted);font-size:12px">Senior</td>
+                <td><div class="score-wrap"><div class="score-bar-bg"><div class="score-bar-fill" style="width:72%;background:linear-gradient(90deg,#fbbf24,#f59e0b)"></div></div><span class="score-num">72</span></div></td>
+                <td><span class="badge review">Review</span></td>
+                <td style="color:var(--muted);font-size:12px;font-family:'JetBrains Mono',monospace">Yesterday</td>
+                <td><div class="action-btns"><button class="act-btn view" onclick="location.href='review.html'">Review</button><button class="act-btn more">···</button></div></td>
+              </tr>
+              <tr>
+                <td><div class="cand-cell"><div class="avatar" style="background:rgba(124,58,237,.15);color:#a78bfa">NJ</div><div><div class="cand-name">Neha Joshi</div><div class="cand-role">Data Analyst</div></div></div></td>
+                <td style="color:var(--muted);font-size:12px">Junior</td>
+                <td><div class="score-wrap"><div class="score-bar-bg"><div class="score-bar-fill" style="width:63%;background:linear-gradient(90deg,#7c3aed,#a78bfa)"></div></div><span class="score-num">63</span></div></td>
+                <td><span class="badge pending">Pending</span></td>
+                <td style="color:var(--muted);font-size:12px;font-family:'JetBrains Mono',monospace">27 May</td>
+                <td><div class="action-btns"><button class="act-btn view">Review</button><button class="act-btn more">···</button></div></td>
+              </tr>
+              <tr>
+                <td><div class="cand-cell"><div class="avatar" style="background:rgba(239,68,68,.1);color:var(--red)">RV</div><div><div class="cand-name">Rohan Verma</div><div class="cand-role">DevOps Engineer</div></div></div></td>
+                <td style="color:var(--muted);font-size:12px">Mid</td>
+                <td><div class="score-wrap"><div class="score-bar-bg"><div class="score-bar-fill" style="width:41%;background:linear-gradient(90deg,#ef4444,#f97316)"></div></div><span class="score-num">41</span></div></td>
+                <td><span class="badge reject">Reject</span></td>
+                <td style="color:var(--muted);font-size:12px;font-family:'JetBrains Mono',monospace">26 May</td>
+                <td><div class="action-btns"><button class="act-btn view">Review</button><button class="act-btn more">···</button></div></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div style="display:flex;flex-direction:column;gap:16px;">
+
+        <!-- ACTIVITY FEED -->
+        <div class="panel fade-up">
+          <div class="panel-header">
+            <div class="panel-title">Live Activity</div>
+            <span style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--blue)">● Live</span>
+          </div>
+          <div class="feed-list">
+            <div class="feed-item">
+              <div class="feed-dot red"></div>
+              <div>
+                <div class="feed-text"><strong>Siddharth Kumar</strong> — face absent 8s</div>
+                <div class="feed-time">just now</div>
+              </div>
+            </div>
+            <div class="feed-item">
+              <div class="feed-dot green"></div>
+              <div>
+                <div class="feed-text"><strong>Aryan Rao</strong> — interview completed</div>
+                <div class="feed-time">12 mins ago</div>
+              </div>
+            </div>
+            <div class="feed-item">
+              <div class="feed-dot blue"></div>
+              <div>
+                <div class="feed-text"><strong>Meera Singh</strong> — started interview</div>
+                <div class="feed-time">18 mins ago</div>
+              </div>
+            </div>
+            <div class="feed-item">
+              <div class="feed-dot yellow"></div>
+              <div>
+                <div class="feed-text"><strong>Priya Mehta</strong> — tab switch detected</div>
+                <div class="feed-time">1 hr ago</div>
+              </div>
+            </div>
+            <div class="feed-item">
+              <div class="feed-dot purple"></div>
+              <div>
+                <div class="feed-text"><strong>Scorecard PDF</strong> sent to your email</div>
+                <div class="feed-time">2 hrs ago</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- QUICK STATS -->
+        <div class="panel fade-up">
+          <div class="panel-header">
+            <div class="panel-title">This Week</div>
+          </div>
+          <div class="quick-stats">
+            <div class="qs-row">
+              <span class="qs-label">Avg Interview Duration</span>
+              <span class="qs-val blue">22m 14s</span>
+            </div>
+            <div class="qs-row">
+              <span class="qs-label">Shortlist Rate</span>
+              <span class="qs-val green">38%</span>
+            </div>
+            <div class="qs-row">
+              <span class="qs-label">Proctoring Flags</span>
+              <span class="qs-val" style="color:var(--yellow)">7 total</span>
+            </div>
+            <div class="qs-row">
+              <span class="qs-label">Avg Comfort Score</span>
+              <span class="qs-val blue">67%</span>
+            </div>
+            <div class="qs-row">
+              <span class="qs-label">PDFs Sent</span>
+              <span class="qs-val green">31</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOTTOM ROW -->
+    <div class="grid-2">
+      <!-- BAR CHART -->
+      <div class="panel fade-up">
+        <div class="panel-header">
+          <div class="panel-title">Interviews This Month</div>
+          <button class="panel-action">May 2026</button>
+        </div>
+        <div class="chart-section">
+          <div class="chart-label">
+            <span>Interviews per day</span>
+            <span>Peak: 8 on May 22</span>
+          </div>
+          <div class="bar-chart">
+            <div class="bar-col"><div class="bar" style="height:30px"></div><span class="bar-lbl">1</span></div>
+            <div class="bar-col"><div class="bar" style="height:50px"></div><span class="bar-lbl">5</span></div>
+            <div class="bar-col"><div class="bar" style="height:20px"></div><span class="bar-lbl">8</span></div>
+            <div class="bar-col"><div class="bar" style="height:70px"></div><span class="bar-lbl">12</span></div>
+            <div class="bar-col"><div class="bar" style="height:40px"></div><span class="bar-lbl">15</span></div>
+            <div class="bar-col"><div class="bar" style="height:85px"></div><span class="bar-lbl">18</span></div>
+            <div class="bar-col"><div class="bar" style="height:60px"></div><span class="bar-lbl">19</span></div>
+            <div class="bar-col"><div class="bar" style="height:55px"></div><span class="bar-lbl">20</span></div>
+            <div class="bar-col"><div class="bar" style="height:90px"></div><span class="bar-lbl">21</span></div>
+            <div class="bar-col"><div class="bar" style="height:100px;opacity:1"></div><span class="bar-lbl">22</span></div>
+            <div class="bar-col"><div class="bar" style="height:65px"></div><span class="bar-lbl">23</span></div>
+            <div class="bar-col"><div class="bar" style="height:45px"></div><span class="bar-lbl">26</span></div>
+            <div class="bar-col"><div class="bar" style="height:70px"></div><span class="bar-lbl">27</span></div>
+            <div class="bar-col"><div class="bar" style="height:80px"></div><span class="bar-lbl">28</span></div>
+            <div class="bar-col"><div class="bar" style="height:55px"></div><span class="bar-lbl">29</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCORE RINGS -->
+      <div class="panel fade-up">
+        <div class="panel-header">
+          <div class="panel-title">Avg Score Breakdown</div>
+        </div>
+        <div class="rings-row">
+          <div class="ring-wrap">
+            <svg class="ring-svg" width="72" height="72" viewBox="0 0 72 72">
+              <circle cx="36" cy="36" r="28" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="6"/>
+              <circle cx="36" cy="36" r="28" fill="none" stroke="url(#rg1)" stroke-width="6" stroke-linecap="round" stroke-dasharray="176" stroke-dashoffset="35" transform="rotate(-90 36 36)"/>
+              <defs><linearGradient id="rg1" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#00d4ff"/><stop offset="100%" stop-color="#7c3aed"/></linearGradient></defs>
+            </svg>
+            <div class="ring-val" style="color:var(--blue)">80%</div>
+            <div class="ring-label">Communication</div>
+          </div>
+          <div class="ring-wrap">
+            <svg class="ring-svg" width="72" height="72" viewBox="0 0 72 72">
+              <circle cx="36" cy="36" r="28" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="6"/>
+              <circle cx="36" cy="36" r="28" fill="none" stroke="url(#rg2)" stroke-width="6" stroke-linecap="round" stroke-dasharray="176" stroke-dashoffset="53" transform="rotate(-90 36 36)"/>
+              <defs><linearGradient id="rg2" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#00ff88"/><stop offset="100%" stop-color="#00d4ff"/></linearGradient></defs>
+            </svg>
+            <div class="ring-val" style="color:var(--green)">70%</div>
+            <div class="ring-label">Technical</div>
+          </div>
+          <div class="ring-wrap">
+            <svg class="ring-svg" width="72" height="72" viewBox="0 0 72 72">
+              <circle cx="36" cy="36" r="28" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="6"/>
+              <circle cx="36" cy="36" r="28" fill="none" stroke="url(#rg3)" stroke-width="6" stroke-linecap="round" stroke-dasharray="176" stroke-dashoffset="44" transform="rotate(-90 36 36)"/>
+              <defs><linearGradient id="rg3" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#a78bfa"/><stop offset="100%" stop-color="#7c3aed"/></linearGradient></defs>
+            </svg>
+            <div class="ring-val" style="color:#a78bfa">75%</div>
+            <div class="ring-label">Confidence</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- NOTIFICATION PANEL -->
+<div class="notif-panel" id="notif-panel">
+  <div class="notif-head">
+    <div class="notif-title">Notifications</div>
+    <button class="notif-close" id="notif-close">✕</button>
+  </div>
+  <div class="notif-item">
+    <div class="notif-icon warn">⚠️</div>
+    <div>
+      <div class="notif-body"><strong>Siddharth Kumar</strong> — face absent for 8s at Q3</div>
+      <div class="notif-ts">just now</div>
+    </div>
+  </div>
+  <div class="notif-item">
+    <div class="notif-icon ok">✅</div>
+    <div>
+      <div class="notif-body"><strong>Aryan Rao</strong> scorecard PDF ready</div>
+      <div class="notif-ts">12 mins ago</div>
+    </div>
+  </div>
+  <div class="notif-item">
+    <div class="notif-icon warn">🔴</div>
+    <div>
+      <div class="notif-body"><strong>Priya Mehta</strong> — tab switch detected (2s) at 14:32</div>
+      <div class="notif-ts">1 hr ago</div>
+    </div>
+  </div>
+  <div class="notif-item">
+    <div class="notif-icon info">📊</div>
+    <div>
+      <div class="notif-body"><strong>Weekly report</strong> ready — 14 candidates, 38% shortlisted</div>
+      <div class="notif-ts">2 hrs ago</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const cursor=document.getElementById('cursor');
+const ring=document.getElementById('cursor-ring');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cursor.style.left=mx+'px';cursor.style.top=my+'px';});
+function animRing(){rx+=(mx-rx)*.12;ry+=(my-ry)*.12;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(animRing);}
+animRing();
+
+const notifBtn=document.getElementById('notif-btn');
+const notifPanel=document.getElementById('notif-panel');
+const notifClose=document.getElementById('notif-close');
+notifBtn.addEventListener('click',()=>notifPanel.classList.toggle('open'));
+notifClose.addEventListener('click',()=>notifPanel.classList.remove('open'));
+document.addEventListener('click',e=>{if(!notifPanel.contains(e.target)&&e.target!==notifBtn)notifPanel.classList.remove('open');});
+</script>
+</body>
+</html>
