@@ -1,4 +1,13 @@
-"dependencies": {
+{
+  "name": "hireai-backend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "echo skip",
+    "start": "npx tsx src/index.ts"
+  },
+  "dependencies": {
     "express": "^4.19.0",
     "cors": "^2.8.5",
     "mongoose": "^8.3.0",
@@ -23,3 +32,4 @@
     "@types/node": "^20.12.0",
     "typescript": "^5.4.0"
   }
+}
