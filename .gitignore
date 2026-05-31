@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+backend/node_modules/
+workers/node_modules/
+
+# Build output
+frontend/.next/
+backend/dist/
+
+# Uploads & recordings
+backend/uploads/
+*.webm
+*.mp4
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
