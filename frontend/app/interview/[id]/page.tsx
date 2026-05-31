@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ProctoringPanel } from '@/components/interview/ProctoringPanel';
+import { AIAvatar } from '@/components/interview/AIAvatar';
 import { useCamera } from '@/hooks/useCamera';
 import { useProctoring } from '@/hooks/useProctoring';
 import { useInterviewWebSocket } from '@/hooks/useInterviewWebSocket';
@@ -107,7 +108,6 @@ export default function InterviewPage() {
 
   useEffect(() => setMounted(true), []);
 
-  // Load interview questions
   useEffect(() => {
     if (!mounted) return;
     async function load() {
@@ -276,7 +276,7 @@ export default function InterviewPage() {
       const blob = new Blob(recordBlobsRef.current, { type: 'video/webm' });
       await api.uploadSessionVideo(sessionId, blob);
     } catch {
-      /* upload optional — continue flow */
+      /* upload optional */
     }
   }, [sessionId]);
 
@@ -691,22 +691,18 @@ export default function InterviewPage() {
 
       <div className="flex-1 p-4 lg:p-6 max-w-7xl mx-auto w-full">
         <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
-          <div className="flex flex-col items-center lg:w-48 shrink-0">
-            <div
-              className={`w-24 h-24 lg:w-28 lg:h-28 rounded-full bg-gradient-to-br from-[#2dd4bf]/40 to-[#a78bfa]/40 flex items-center justify-center mb-3 ${
-                aiSpeaking ? 'animate-pulse ring-2 ring-[#2dd4bf]/50' : ''
-              }`}
-            >
-              <span className="text-4xl">🤖</span>
-            </div>
-            <p className="text-xs text-gray-500">AI Interviewer</p>
+
+          {/* AI Avatar column */}
+          <div className="flex flex-col items-center lg:w-48 shrink-0 pt-2">
+            <AIAvatar speaking={aiSpeaking} />
             {sessionId && (
-              <p className="text-[10px] text-gray-600 mt-2">
+              <p className="text-[10px] text-gray-600 mt-1">
                 {sessionId.startsWith('local-') ? 'Offline mode' : wsStatus === 'connected' ? '● Live' : '○ Syncing'}
               </p>
             )}
           </div>
 
+          {/* Main content */}
           <div className="flex-1 min-w-0">
             <div className={`glass rounded-2xl p-4 lg:p-6 mb-4 ${isFollowup ? 'border border-orange-500/40 bg-orange-500/5' : ''}`}>
               <p className="text-xs text-accent-blue mb-2 uppercase tracking-wider">
@@ -725,18 +721,16 @@ export default function InterviewPage() {
                 autoPlay
                 muted
                 playsInline
-                onLoadedMetadata={() => {
-                  attachToVideo();
-                }}
-                onCanPlay={() => {
-                  attachToVideo();
-                }}
+                onLoadedMetadata={() => { attachToVideo(); }}
+                onCanPlay={() => { attachToVideo(); }}
                 className="w-full h-full object-cover"
                 style={{ transform: 'scaleX(-1)' }}
               />
 
               {!cameraReady && !cameraError && !getStream()?.getVideoTracks()[0] && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/80 text-gray-400 text-sm">Starting camera...</div>
+                <div className="absolute inset-0 flex items-center justify-center bg-black/80 text-gray-400 text-sm">
+                  Starting camera...
+                </div>
               )}
 
               {cameraError && (
@@ -750,9 +744,7 @@ export default function InterviewPage() {
 
               {proctoring.blocked && proctoring.blockReason === 'tab_switch' && !violationModalOpen && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-10 p-6 text-center">
-                  <div>
-                    <p className="text-red-300 font-semibold mb-2">Checking proctoring…</p>
-                  </div>
+                  <p className="text-red-300 font-semibold mb-2">Checking proctoring…</p>
                 </div>
               )}
 

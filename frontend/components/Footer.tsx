@@ -7,7 +7,7 @@ export function Footer() {
         <div>
           <p className="font-display font-bold text-lg flex items-center gap-0.5">
             HIREAI
-            <span className="w-1.5 h-1.5 rounded-full bg-accent-blue inline-block" />
+            <span className="w-1.5 h-1.5 rounded-full bg-white/40 inline-block" />
           </p>
           <p className="text-gray-600 text-sm mt-1">Interview smarter. Hire faster.</p>
         </div>
@@ -18,7 +18,7 @@ export function Footer() {
           <Link href="#" className="hover:text-white transition-colors">Privacy</Link>
         </div>
 
-        <p className="text-gray-600 text-xs">Built with ❤️ and Claude API</p>
+        <p className="text-gray-600 text-xs">Built with Banao Technology</p>
       </div>
     </footer>
   );
